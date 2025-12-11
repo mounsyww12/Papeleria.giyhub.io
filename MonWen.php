@@ -2,22 +2,21 @@
 session_start();
 
 $products = [
-    1 => ["name"=>"Mochila", "desc"=>"Mochiia de excelente calidad, ideal para estudiantes y uso diario.", "price"=>300],
-    2 => ["name"=>"Marcadores", "desc"=>" excelente  calidad.", "price"=>140.00, ],
-    3 => ["name"=>"Cuadernos escolares", "desc"=>" calidad exelente.", "price"=>380.00, ],
-    4 => ["name"=>"Lápiceras #2", "desc"=>"excelente calidad y gran espacio.", "price"=>60.00, ],
-    5 => ["name"=>"Pinturas", "desc"=>"excelente pigmentacon.", "price"=>110.00, ],
-    6 => ["name"=>"Pinceles", "desc"=>"Pincel de dibujo  ideal para estudiantes.", "price"=>90.00, ]
+    1 => ["name"=>"Mochila", "desc"=>"Mochila de excelente calidad, ideal para estudiantes y uso diario.", "price"=>300],
+    2 => ["name"=>"Marcadores", "desc"=>"Excelente calidad.", "price"=>140.00],
+    3 => ["name"=>"Cuadernos escolares", "desc"=>"Calidad excelente.", "price"=>380.00],
+    4 => ["name"=>"Lápiceras #2", "desc"=>"Excelente calidad y gran espacio.", "price"=>60.00],
+    5 => ["name"=>"Pinturas", "desc"=>"Excelente pigmentación.", "price"=>110.00],
+    6 => ["name"=>"Pinceles", "desc"=>"Pincel de dibujo ideal para estudiantes.", "price"=>90.00]
 ];
-
 
 if (!isset($_SESSION['cart'])) {
     $_SESSION['cart'] = [];
 }
 
-
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
+   
     if (isset($_POST['action']) && $_POST['action'] === 'add' && isset($_POST['product_id'])) {
         $pid = intval($_POST['product_id']);
         $qty = isset($_POST['qty']) ? max(1, intval($_POST['qty'])) : 1;
@@ -60,8 +59,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $_SESSION['cart'] = [];
         $message = "Carrito vaciado.";
     }
+
+    
+    if (isset($_POST['action']) && $_POST['action'] === 'update_price' && isset($_POST['product_id']) && isset($_POST['new_price'])) {
+        $pid = intval($_POST['product_id']);
+        $new_price = floatval($_POST['new_price']);
+        if (isset($products[$pid]) && $new_price > 0) {
+            $products[$pid]['price'] = $new_price;
+            $message = "Precio actualizado: " . htmlspecialchars($products[$pid]['name']);
+        }
+    }
 }
 ?>
+
 <!doctype html>
 <html lang="es">
 <head>
@@ -69,12 +79,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <title>★★ 🎀 𝑀❀𝓃𝒲𝑒𝓃 - 𝒫𝒶𝓅𝑒𝓁𝑒𝓇í𝒶 🎀 ★★</title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <link rel="stylesheet" href="styles.css">
-
 </head>
-<body color="#72d3ecff;" <p style="color: -#0e8cc2ff;"></p>
+<body>
 
 <header class="site-header">
-    <h1>                        .★·.·´¯`·.·★ 𝓑𝓲𝓮𝓷𝓿𝓮𝓷𝓲𝓭𝓸𝓼 𝓪 𝓟𝓪𝓹𝓮𝓵𝓮𝓻í𝓪 ★·.·´¯`·.·★. <span class="brand"> 🎀 𝑀❀𝓃𝒲𝑒𝓃 - 𝒫𝒶𝓅𝑒𝓁𝑒𝓇í𝒶 🎀 </span></h1>
+    <h1>                        .★·.·´¯`·.·★ 𝓑𝓲𝓮𝓷𝓿𝓮𝓷𝓲𝓭𝓸𝓼 𝓪 𝓟𝓪𝓹𝓮𝓁𝓮𝓻í𝓪 ★·.·´¯`·.·★. <span class="brand"> 🎀 𝑀❀𝓃𝒲𝑒𝓃 - 𝒫𝒶𝓅𝑒𝓁𝑒𝓇í𝒶 🎀 </span></h1>
     <p class="subtitle">𝑀𝒶𝓉𝑒𝓇𝒾𝒶𝓁 𝑒𝓈𝒸𝑜𝓁𝒶𝓇 𝓎 𝒹𝑒 𝑜𝒻𝒾𝒸𝒾𝓃𝒶— 𝒞𝒶𝓁𝒾𝒹𝒶𝒹 𝓅𝒶𝓇𝒶 𝑒𝓈𝓉𝓊𝒹𝒾𝒶𝓃𝓉𝑒𝓈</p>
     <nav class="nav">
         <a href="materialesescolaresp3.php">C̳a̳t̳á̳l̳o̳g̳o̳</a> |
@@ -90,11 +99,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <section id="catalogo" class="catalog">
         <?php foreach ($products as $id => $p): ?>
             <article class="card">
-                
                 <h3><?php echo htmlspecialchars($p['name']); ?></h3>
                 <p class="desc"><?php echo htmlspecialchars($p['desc']); ?></p>
                 <p class="price">$ <?php echo number_format($p['price'], 2); ?></p>
 
+                <!-- Formulario para agregar al carrito -->
                 <form method="post" class="add-form">
                     <input type="hidden" name="action" value="add">
                     <input type="hidden" name="product_id" value="<?php echo $id; ?>">
@@ -103,10 +112,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </label>
                     <button type="submit" class="btn add-btn">Agregar</button>
                 </form>
+
+                
+                <form method="post" class="update-price-form">
+                    <input type="hidden" name="action" value="update_price">
+                    <input type="hidden" name="product_id" value="<?php echo $id; ?>">
+                    <label for="new_price">Nuevo precio:</label>
+                    <input type="number" name="new_price" value="<?php echo number_format($p['price'], 2); ?>" step="0.01" min="0" class="price-input">
+                    <button type="submit" class="btn update-btn">Actualizar precio</button>
+                </form>
             </article>
         <?php endforeach; ?>
     </section>
 
+    
     <section id="carrito" class="cart">
         <h2>Carrito de Compras</h2>
         <?php if (empty($_SESSION['cart'])): ?>
@@ -153,22 +172,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             <div class="summary">
                 <p><strong>Total:</strong> $ <?php echo number_format($total,2); ?></p>
-                <form method="post" action="ticket.php" action="pago.php"  class="finalize-form">
-                    
+                <form method="post" action="ticket.php" class="finalize-form">
                     <?php foreach ($_SESSION['cart'] as $pid => $qty): ?>
                         <input type="hidden" name="cart[<?php echo $pid; ?>]" value="<?php echo $qty; ?>">
                     <?php endforeach; ?>
-                    <button type="submit" class="btn primary">♥╣[-_-]╠♥ Finalizar Venta ♥╣[-_-]╠♥(Generar Ticket)</button>
+                    
                 </form>
 
-               <form method="post" style="display:inline;">
-    <input type="hidden" name="action" value="empty">
-    <button type="submit" class="btn danger">Vaciar carrito</button>
-</form>
-
-
-    <a href="catalogo.php">Catálogo</a>
+                <form method="post" style="display:inline;">
+                    <input type="hidden" name="action" value="empty">
+                    <button type="submit" class="btn danger">Vaciar carrito</button>
                 </form>
+
+                
             </div>
         <?php endif; ?>
     </section>
@@ -177,9 +193,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <footer class="site-footer">
     <p>🍇 ⋆ 🍧 🎀 𝒫𝒶𝓅𝑒𝓁𝑒𝓇í𝒶 𝑀🌺𝓃𝒲𝑒𝓃 🎀 🍧 ⋆ 🍇 — Atención Cecytem · &copy; <?php echo date("Y"); ?></p>
 </footer>
+
 </body>
 </html>
-<?php
-
-
-
